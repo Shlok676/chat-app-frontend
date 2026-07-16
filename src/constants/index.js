@@ -32,3 +32,4 @@ export const THEMES = [
   "nord",
   "sunset",
 ];
+export const BACKEND_URL="https://chat-app-backend-z4hb.onrender.com"
