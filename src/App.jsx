@@ -9,6 +9,7 @@ import SignUpPage from './pages/SignUpPage.jsx';
 import LoginPage from './pages/LoginPage.jsx';
 import SettingsPage from './pages/SettingsPage.jsx';
 import ProfilePage from './pages/ProfilePage.jsx';
+import FriendRequests from './pages/FriendRequests.jsx';
 
 import { useAuthStore } from './store/useAuthStore.js';
 import { useThemeStore } from './store/useThemeStore.js';
@@ -45,6 +46,7 @@ const App = () => {
         <Route path="/login" element={ !authUser ? <LoginPage /> : <Navigate to="/" />} />
         <Route path="/settings" element={<SettingsPage />} />
         <Route path="/profile" element={authUser ? <ProfilePage /> : <Navigate to="/login" />} />
+        <Route path="/friend-requests" element={authUser ? <FriendRequests /> : <Navigate to="/login" />} />
       </Routes>
 
       <Toaster />
