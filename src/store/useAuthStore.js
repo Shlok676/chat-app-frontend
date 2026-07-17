@@ -13,17 +13,23 @@ export const useAuthStore = create((set, get) => ({
   isUpdatingProfile: false,
   isCheckingAuth: true,
   onlineUsers: [],
+  contacts: [],
   socket: null,
 
   checkAuth: async () => {
     try {
       const res = await axiosInstance.get("/auth/check");
-      set({ authUser: res.data });
+      set({
+        authUser: res.data,
+        contacts: res.data.contacts?.map((contact) =>
+          typeof contact === "object" ? contact._id : contact
+        ) ?? []
+      });
 
       get().connectSocket();
     } catch (error) {
       console.log("Error in checkAuth:", error);
-      set({ authUser: null });
+      set({ authUser: null, contacts: [] });
     } finally {
       set({ isCheckingAuth: false });
     }
@@ -34,7 +40,12 @@ export const useAuthStore = create((set, get) => ({
 
     try {
       const res = await axiosInstance.post("/auth/signup", data);
-      set({ authUser: res.data });
+      set({
+        authUser: res.data,
+        contacts: res.data.contacts?.map((contact) =>
+          typeof contact === "object" ? contact._id : contact
+        ) ?? []
+      });
       toast.success("Account created successfully");
 
       get().connectSocket();
@@ -49,7 +60,12 @@ export const useAuthStore = create((set, get) => ({
     set({ isLoggingIn: true });
     try {
       const res = await axiosInstance.post("/auth/login", data);
-      set({ authUser: res.data });
+      set({
+        authUser: res.data,
+        contacts: res.data.contacts?.map((contact) =>
+          typeof contact === "object" ? contact._id : contact
+        ) ?? []
+      });
       toast.success("Logged in successfully");
 
       get().connectSocket();
@@ -77,12 +93,43 @@ export const useAuthStore = create((set, get) => ({
 
     try {
       const res = await axiosInstance.put("/auth/update-profile", data);
-      set({ authUser: res.data });
+      set((state) => ({
+        authUser: {
+          ...state.authUser,
+          ...res.data,
+          contacts: state.authUser?.contacts ?? []
+        }
+      }));
     } catch (error) {
       console.log("Error in update profile", error);
       toast.error(error.response.data.message);
     } finally {
       set({ isUpdatingProfile: false });
+    }
+  },
+
+  getUserByUsername: async (username) => {
+    try {
+      const res = await axiosInstance.get(`/auth/user/${username}`);
+      return res.data;
+    } catch (error) {
+      console.log("Error in getUserByUsername:", error);
+      toast.error(error.response?.data?.message || "Unable to find user");
+    }
+  },
+
+  addContact: async (userId) => {
+    try {
+      const res = await axiosInstance.post("/auth/contacts", { userId });
+      set((state) => ({
+        contacts: state.contacts.includes(userId)
+          ? state.contacts
+          : [...state.contacts, userId]
+      }));
+      return res.data;
+    } catch (error) {
+      console.log("Error in addContact:", error);
+      toast.error(error.response?.data?.message || "Unable to add contact");
     }
   },
 

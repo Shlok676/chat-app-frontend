@@ -4,22 +4,59 @@ import { useChatStore } from "../store/useChatStore";
 import { useAuthStore } from "../store/useAuthStore";
 import SidebarSkeleton from "./skeletons/SidebarSkeleton.jsx";
 import { Users } from "lucide-react";
+import toast from "react-hot-toast";
 
 const Sidebar = () => {
   const { getUsers, users, selectedUser, setSelectedUser, isUsersLoading } = useChatStore();
-  const { onlineUsers } = useAuthStore();
+  const { onlineUsers, getUserByUsername, addContact } = useAuthStore();
 
   const [showOnlineOnly, setShowOnlineOnly] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResult, setSearchResult] = useState(null);
 
   useEffect(() => {
     getUsers();
   }, [getUsers]);
 
-   const filteredUsers = showOnlineOnly
+  const filteredUsers = searchResult
+    ? [searchResult]
+    : showOnlineOnly
     ? users.filter((user) => onlineUsers.includes(user._id))
     : users;
 
   if (isUsersLoading) return <SidebarSkeleton />;
+
+  const handleSearchContacts = async (e) => {
+    e.preventDefault();
+
+    if (!searchQuery.trim()) {
+      setSearchResult(null);
+      toast.error("Please enter a valid username");
+      return;
+    }
+
+    const result = await getUserByUsername(searchQuery.trim());
+
+    if (!result) {
+      setSearchResult(null);
+      toast.error("User not found");
+      return;
+    }
+
+    setSearchResult(result);
+  };
+
+  const handleSelectUser = async (user) => {
+    setSelectedUser(user);
+
+    if (searchResult && user._id === searchResult._id) {
+      await addContact(user._id);
+      setSearchResult(null);
+      setSearchQuery("");
+      toast.success("Contact added successfully")
+      getUsers();
+    }
+  };
 
   return (
     <aside className="h-full w-20 lg:w-72 border-r border-base-300 flex flex-col transition-all duration-200">
@@ -29,6 +66,21 @@ const Sidebar = () => {
           <Users className="size-6" />
           <span className="font-medium hidden lg:block">Contacts</span>
         </div>
+
+        <form
+          onSubmit={handleSearchContacts}
+          className="mt-3 w-full"
+          aria-label="add-contact-search-form"
+        >
+          <input
+            type="text"
+            name="contactSearch"
+            placeholder="Search contacts to add to your contact list"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="input input-sm w-full max-w-xs"
+          />
+        </form>
 
         <div className="mt-3 hidden lg:flex items-center gap-2">
           <label className="cursor-pointer flex items-center gap-2">
@@ -40,7 +92,7 @@ const Sidebar = () => {
             />
             <span className="text-sm">Show online only</span>
           </label>
-          <span className="text-xs text-zinc-500">({onlineUsers.length - 1} online)</span>
+          <span className="text-xs text-zinc-500">({users.filter((user) => onlineUsers.includes(user._id)).length} online)</span>
         </div>
 
       </div>
@@ -50,7 +102,7 @@ const Sidebar = () => {
         {filteredUsers.map((user) => (
           <button
             key={user._id}
-            onClick={() => setSelectedUser(user)}
+            onClick={() => handleSelectUser(user)}
             className={`
               w-full p-3 flex items-center gap-3
               hover:bg-base-300 transition-colors
