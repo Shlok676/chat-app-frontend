@@ -130,6 +130,7 @@ export const useAuthStore = create((set, get) => ({
     } catch (error) {
       console.log("Error in addContact:", error);
       toast.error(error.response?.data?.message || "Unable to add contact");
+      return false;
     }
   },
 

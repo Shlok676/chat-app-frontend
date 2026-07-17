@@ -39,7 +39,6 @@ const Sidebar = () => {
 
     if (!result) {
       setSearchResult(null);
-      toast.error("User not found");
       return;
     }
 
@@ -53,8 +52,8 @@ const Sidebar = () => {
       await addContact(user._id);
       setSearchResult(null);
       setSearchQuery("");
-      toast.success("Contact added successfully")
-      getUsers();
+      const isValidContact = getUsers();
+      if (isValidContact) toast.success("Contact added successfully");
     }
   };
 
