@@ -1,10 +1,21 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { Link } from "react-router-dom";
 import { useAuthStore } from "../store/useAuthStore.js";
+import { useRequestStore } from "../store/useRequestStore.js";
 import { LogOut, MessageSquare, Settings, User, UserCheck } from "lucide-react";
 
 const NavBar = () => {
   const { logout, authUser } = useAuthStore();
+  const { pendingRequests, getPendingRequests } = useRequestStore();
+
+  useEffect(() => {
+    if (authUser) {
+      getPendingRequests();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authUser]);
+
+  const badgeCount = pendingRequests.length;
 
   return (
     <header className="bg-base-100 border-b border-base-300 fixed w-full top-0 z-40 
@@ -34,9 +45,15 @@ const NavBar = () => {
 
             {authUser && (
               <>
-                <Link to={"/friend-requests"} className={`btn btn-sm gap-2`}>
+                <Link to={"/friend-requests"} className={`btn btn-sm gap-2 relative`}>
                   <UserCheck className="size-5" />
                   <span className="hidden sm:inline">Friend Requests</span>
+                  
+                  {badgeCount > 0 && (
+                    <span className="absolute -top-1.5 -right-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-error text-error-content text-[10px] font-bold ring-2 ring-base-100 animate-pulse">
+                      {badgeCount}
+                    </span>
+                  )}
                 </Link>
 
                 <Link to={"/profile"} className={`btn btn-sm gap-2`}>
