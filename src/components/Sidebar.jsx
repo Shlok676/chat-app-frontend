@@ -53,6 +53,7 @@ const Sidebar = () => {
     if (searchResult && user._id === searchResult._id) {
       if (!contacts.includes(user._id)) {
         await sendRequest(user._id);
+        setSelectedUser(null);
       } else {
         toast.error("User is already in your contact list");
       }
