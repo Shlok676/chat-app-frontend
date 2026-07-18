@@ -12,8 +12,7 @@ const NavBar = () => {
     if (authUser) {
       getPendingRequests();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [authUser]);
+  }, [authUser, getPendingRequests]);
 
   const badgeCount = pendingRequests.length;
 

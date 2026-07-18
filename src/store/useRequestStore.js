@@ -58,4 +58,19 @@ export const useRequestStore = create((set, get) => ({
       toast.error("Failed to decline request");
     }
   },
+
+  unfriend: async (targetUserId) => {
+    try {
+      await axiosInstance.delete(`/requests/unfriend/${targetUserId}`);
+      
+      useAuthStore.setState((state) => ({
+        contacts: state.contacts.filter((id) => id !== targetUserId)
+      }));
+      
+      toast.success("Removed from your contacts");
+    } catch (error) {
+      toast.error("Failed to unfriend user");
+    }
+  },
+
 }));
