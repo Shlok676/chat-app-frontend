@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { axiosInstance } from "../lib/axios.js";
 import { useAuthStore } from "./useAuthStore.js";
 import toast from "react-hot-toast";
+import { useChatStore } from "../store/useChatStore.js";
 
 export const useRequestStore = create((set, get) => ({
   pendingRequests: [],
@@ -24,8 +25,7 @@ export const useRequestStore = create((set, get) => ({
       await axiosInstance.post("/requests/send", { receiverId });
       toast.success("Friend request sent!");
     } catch (error) {
-      const errorMsg = error.response.data.message || "Failed to send request";
-      toast.error(errorMsg);
+      toast.error(error.response.data.message);
     }
   },
 
@@ -41,7 +41,7 @@ export const useRequestStore = create((set, get) => ({
       
       toast.success("You are now friends!");
     } catch (error) {
-      toast.error("Failed to accept request");
+      toast.error(error.response.data.message);
     }
   },
 
@@ -53,9 +53,9 @@ export const useRequestStore = create((set, get) => ({
         pendingRequests: state.pendingRequests.filter((req) => req._id !== requestId),
       }));
       
-      toast.success("Request removed");
+      toast.success("Friend request declined");
     } catch (error) {
-      toast.error("Failed to decline request");
+      toast.error(error.response.data.message);
     }
   },
 
@@ -69,8 +69,42 @@ export const useRequestStore = create((set, get) => ({
       
       toast.success("Removed from your contacts");
     } catch (error) {
-      toast.error("Failed to unfriend user");
+      toast.error(error.response.data.message);
     }
   },
+
+    listenToRequests: () => {
+    const { socket } = useAuthStore.getState();
+    const { getUsers, selectedUser } = useChatStore.getState();
+    
+    if (!socket) return;
+
+    socket.off("newFriendRequest").on("newFriendRequest", (newRequest) => {
+      set((state) => ({
+        pendingRequests: [newRequest, ...state.pendingRequests]
+      }));
+    });
+
+    socket.off("friendRequestAccepted").on("friendRequestAccepted", async (data) => {
+      await getUsers(); 
+    });
+
+    socket.off("userUnfriended").on("userUnfriended", async (data) => {
+      if (selectedUser && selectedUser._id === data.unfriendedByUserId) {
+        useChatStore.setState({ selectedUser: null });
+      }
+      await getUsers();
+    });
+  },
+
+  stopListeningToRequests: () => {
+    const { socket } = useAuthStore.getState();
+    if (socket) {
+      socket.off("newFriendRequest");
+      socket.off("friendRequestAccepted");
+      socket.off("userUnfriended");
+    }
+  }
+
 
 }));

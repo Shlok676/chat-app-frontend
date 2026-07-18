@@ -12,14 +12,23 @@ import ProfilePage from './pages/ProfilePage.jsx';
 import FriendRequests from './pages/FriendRequests.jsx';
 
 import { useAuthStore } from './store/useAuthStore.js';
+import { useRequestStore } from './store/useRequestStore.js';
 import { useThemeStore } from './store/useThemeStore.js';
 
 import { Loader } from 'lucide-react';
 
 const App = () => {
 
-  const { authUser, checkAuth, isCheckingAuth, onlineUsers } = useAuthStore();
-  console.log({ onlineUsers });
+  const { authUser, checkAuth, isCheckingAuth, onlineUsers, socket } = useAuthStore();
+  const { listenToRequests, stopListeningToRequests } = useRequestStore();
+
+  useEffect(() => {
+    if (authUser && socket) {
+      listenToRequests();
+    }
+    return () => stopListeningToRequests();
+  }, [authUser, socket, listenToRequests, stopListeningToRequests]);
+
   const { theme } = useThemeStore();
   useEffect(() => {
     checkAuth();
