@@ -48,11 +48,9 @@ export const useChatStore = create((set, get) => ({
     },
 
         getMessages: async (userId, loadMore = false) => {
-        // Pull current states to check for loading flags or existing message length
         const { isMessagesLoading, messages } = get();
         if (isMessagesLoading) return;
 
-        // Reset tracking states if launching a brand new fresh chat conversation window
         if (!loadMore) {
           set({ messages: [], hasMore: true });
         }
