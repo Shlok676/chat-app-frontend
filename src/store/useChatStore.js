@@ -32,6 +32,7 @@ export const useChatStore = create((set, get) => ({
     selectedUser: null,
     isUsersLoading: false,
     isMessagesLoading: false,
+    hasMore: true,
 
     getUsers: async () => {
         set({ isUsersLoading: true });
@@ -46,18 +47,41 @@ export const useChatStore = create((set, get) => ({
         }
     },
 
-    getMessages: async (userId) => {
+        getMessages: async (userId, loadMore = false) => {
+        // Pull current states to check for loading flags or existing message length
+        const { isMessagesLoading, messages } = get();
+        if (isMessagesLoading) return;
+
+        // Reset tracking states if launching a brand new fresh chat conversation window
+        if (!loadMore) {
+          set({ messages: [], hasMore: true });
+        }
+
         set({ isMessagesLoading: true });
         try {
-          const res = await axiosInstance.get(`/messages/${userId}`);
-          const formattedMessages = res.data.map(msg => formatMessageData(msg));
-          set({ messages: formattedMessages });
+          const oldestTimestamp = loadMore && messages.length > 0 ? messages[0].createdAt : null;
+          
+          const url = oldestTimestamp 
+            ? `/messages/${userId}?before=${oldestTimestamp}` 
+            : `/messages/${userId}`;
+
+          const res = await axiosInstance.get(url);
+          const formattedNewMessages = res.data.map(msg => formatMessageData(msg));
+  
+          if (formattedNewMessages.length < 50) {
+            set({ hasMore: false });
+          }
+
+          set({ 
+            messages: loadMore ? [...formattedNewMessages, ...messages] : formattedNewMessages 
+          });
         } catch (error) {
           toast.error(error.response?.data?.message || "Error loading messages");
         } finally {
           set({ isMessagesLoading: false });
         }
     },
+
 
     sendMessage: async (messageData) => {
         const { selectedUser, messages } = get();
