@@ -4,6 +4,22 @@ import { useAuthStore } from "./useAuthStore.js";
 import toast from "react-hot-toast";
 import { useChatStore } from "../store/useChatStore.js";
 
+const formatRequestData = (req) => {
+  if (!req) return null;
+  return {
+    _id: req._id,
+    senderId: req.s ? {
+      _id: req.s._id,
+      userName: req.s.u || req.s.userName,
+      profilePic: req.s.r || req.s.profilePic,
+      fullName: req.s.f || req.s.fullName
+    } : null,
+    receiverId: req.r || req.receiverId,
+    status: req.st || req.status,
+    createdAt: req.c || req.createdAt
+  };
+};
+
 export const useRequestStore = create((set, get) => ({
   pendingRequests: [],
   isRequestsLoading: false,
@@ -12,10 +28,11 @@ export const useRequestStore = create((set, get) => ({
     set({ isRequestsLoading: true });
     try {
       const res = await axiosInstance.get("/requests/pending");
-      set({ pendingRequests: res.data, isRequestsLoading: false });
+      const formatted = res.data.map(req => formatRequestData(req));
+      set({ pendingRequests: formatted, isRequestsLoading: false });
     } catch (error) {
       console.error("Error loading pending requests:", error);
-      toast.error(error.response.data.message);
+      toast.error(error.response?.data?.message || "Error loading requests");
       set({ isRequestsLoading: false });
     }
   },
@@ -73,15 +90,16 @@ export const useRequestStore = create((set, get) => ({
     }
   },
 
-    listenToRequests: () => {
+  listenToRequests: () => {
     const { socket } = useAuthStore.getState();
     const { getUsers, selectedUser } = useChatStore.getState();
     
     if (!socket) return;
 
     socket.off("newFriendRequest").on("newFriendRequest", (newRequest) => {
+      const formatted = formatRequestData(newRequest);
       set((state) => ({
-        pendingRequests: [newRequest, ...state.pendingRequests]
+        pendingRequests: [formatted, ...state.pendingRequests]
       }));
     });
 
@@ -105,6 +123,4 @@ export const useRequestStore = create((set, get) => ({
       socket.off("userUnfriended");
     }
   }
-
-
 }));

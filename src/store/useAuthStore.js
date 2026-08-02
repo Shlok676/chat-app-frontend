@@ -5,6 +5,18 @@ import { io } from "socket.io-client";
 
 const SOCKET_URL = import.meta.env.MODE === "development" ? "http://localhost:4000" : "https://chat-app-backend-z4hb.onrender.com";
 
+const formatUserData = (data) => {
+  if (!data) return null;
+  return {
+    _id: data._id,
+    userName: data.u || data.userName,
+    fullName: data.f || data.fullName,
+    email: data.e || data.email,
+    profilePic: data.r || data.profilePic,
+    contacts: data.co || data.contacts || []
+  };
+};
+
 export const useAuthStore = create((set, get) => ({
   authUser: null,
   isSigningUp: false,
@@ -18,9 +30,11 @@ export const useAuthStore = create((set, get) => ({
   checkAuth: async () => {
     try {
       const res = await axiosInstance.get("/auth/check");
+      const formattedUser = formatUserData(res.data);
+      
       set({
-        authUser: res.data,
-        contacts: res.data.contacts?.map((contact) =>
+        authUser: formattedUser,
+        contacts: formattedUser?.contacts?.map((contact) =>
           typeof contact === "object" ? contact._id : contact
         ) ?? []
       });
@@ -39,9 +53,11 @@ export const useAuthStore = create((set, get) => ({
 
     try {
       const res = await axiosInstance.post("/auth/signup", data);
+      const formattedUser = formatUserData(res.data);
+
       set({
-        authUser: res.data,
-        contacts: res.data.contacts?.map((contact) =>
+        authUser: formattedUser,
+        contacts: formattedUser?.contacts?.map((contact) =>
           typeof contact === "object" ? contact._id : contact
         ) ?? []
       });
@@ -59,9 +75,11 @@ export const useAuthStore = create((set, get) => ({
     set({ isLoggingIn: true });
     try {
       const res = await axiosInstance.post("/auth/login", data);
+      const formattedUser = formatUserData(res.data);
+
       set({
-        authUser: res.data,
-        contacts: res.data.contacts?.map((contact) =>
+        authUser: formattedUser,
+        contacts: formattedUser?.contacts?.map((contact) =>
           typeof contact === "object" ? contact._id : contact
         ) ?? []
       });
@@ -92,13 +110,16 @@ export const useAuthStore = create((set, get) => ({
 
     try {
       const res = await axiosInstance.put("/auth/update-profile", data);
+      const formattedUser = formatUserData(res.data);
+
       set((state) => ({
         authUser: {
           ...state.authUser,
-          ...res.data,
-          contacts: state.authUser?.contacts ?? []
+          ...formattedUser,
+          contacts: formattedUser?.contacts ?? state.authUser?.contacts ?? []
         }
       }));
+      toast.success("Profile updated successfully");
     } catch (error) {
       console.log("Error in update profile", error);
       toast.error(error.response.data.message);
@@ -110,7 +131,7 @@ export const useAuthStore = create((set, get) => ({
   getUserByUsername: async (username) => {
     try {
       const res = await axiosInstance.get(`/auth/user/${username}`);
-      return res.data;
+      return formatUserData(res.data);
     } catch (error) {
       console.log("Error in getUserByUsername:", error);
       toast.error(error.response?.data?.message || "Unable to find user");
@@ -125,9 +146,9 @@ export const useAuthStore = create((set, get) => ({
           ? state.contacts
           : [...state.contacts, userId]
       }));
-      return res.data;
+      return formatUserData(res.data);
     } catch (error) {
-      console.log("Error in addContact:", error);
+      console.log("Error in addContact:", error.message);
       toast.error(error.response?.data?.message || "Unable to add contact");
       return false;
     }

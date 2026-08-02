@@ -3,6 +3,29 @@ import toast from "react-hot-toast";
 import { axiosInstance } from "../lib/axios.js";
 import { useAuthStore } from "./useAuthStore.js";
 
+const formatMessageData = (msg) => {
+  if (!msg) return null;
+  return {
+    _id: msg._id,
+    senderId: msg.s || msg.senderId,
+    receiverId: msg.r || msg.receiverId,
+    text: msg.t || msg.text,
+    image: msg.i || msg.image,
+    createdAt: msg.c || msg.createdAt
+  };
+};
+
+const formatUserData = (user) => {
+  if (!user) return null;
+  return {
+    _id: user._id,
+    userName: user.u || user.userName,
+    fullName: user.f || user.fullName,
+    email: user.e || user.email,
+    profilePic: user.r || user.profilePic
+  };
+};
+
 export const useChatStore = create((set, get) => ({
     messages: [],
     users: [],
@@ -14,9 +37,10 @@ export const useChatStore = create((set, get) => ({
         set({ isUsersLoading: true });
         try {
           const res = await axiosInstance.get("/messages/users");
-          set({ users: res.data });
+          const formattedUsers = res.data.map(user => formatUserData(user));
+          set({ users: formattedUsers });
         } catch (error) {
-          toast.error(error.response.data.message);
+          toast.error(error.response?.data?.message || "Error loading users");
         } finally {
           set({ isUsersLoading: false });
         }
@@ -26,9 +50,10 @@ export const useChatStore = create((set, get) => ({
         set({ isMessagesLoading: true });
         try {
           const res = await axiosInstance.get(`/messages/${userId}`);
-          set({ messages: res.data });
+          const formattedMessages = res.data.map(msg => formatMessageData(msg));
+          set({ messages: formattedMessages });
         } catch (error) {
-          toast.error(error.response.data.message);
+          toast.error(error.response?.data?.message || "Error loading messages");
         } finally {
           set({ isMessagesLoading: false });
         }
@@ -38,9 +63,10 @@ export const useChatStore = create((set, get) => ({
         const { selectedUser, messages } = get();
         try {
           const res = await axiosInstance.post(`/messages/send/${selectedUser._id}`, messageData);
-          set({ messages: [...messages, res.data] });
+          const formattedNewMessage = formatMessageData(res.data);
+          set({ messages: [...messages, formattedNewMessage] });
         } catch (error) {
-          toast.error(error.response.data.message);
+          toast.error(error.response?.data?.message || "Error sending message");
         }
     },
 
@@ -49,21 +75,24 @@ export const useChatStore = create((set, get) => ({
       if (!selectedUser) return;
 
       const socket = useAuthStore.getState().socket;
+      if (!socket) return;
 
-      socket.on("newMessage", (newMessage) => {
-        const isMessageSentFromSelectedUser = newMessage.senderId === selectedUser._id;
+      socket.on("newMessage", (newMessagePayload) => {
+        const isMessageSentFromSelectedUser = newMessagePayload.s === selectedUser._id;
 
         if (!isMessageSentFromSelectedUser) return;
 
+        const formatted = formatMessageData(newMessagePayload);
+
         set({
-          messages: [...get().messages, newMessage],
+          messages: [...get().messages, formatted],
         });
     });
   },
 
     unsubscribeFromMessages: () => {
       const socket = useAuthStore.getState().socket;
-      socket.off("newMessage");
+      if (socket) socket.off("newMessage");
     },
 
     setSelectedUser: (selectedUser) => {
