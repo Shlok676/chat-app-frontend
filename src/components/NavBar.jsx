@@ -2,7 +2,7 @@ import React, { useEffect } from 'react'
 import { Link } from "react-router-dom";
 import { useAuthStore } from "../store/useAuthStore.js";
 import { useRequestStore } from "../store/useRequestStore.js";
-import { LogOut, MessageSquare, Settings, User, UserCheck } from "lucide-react";
+import { LogOut, MessageSquare, Settings, User, UserCheck, Download } from "lucide-react";
 
 const NavBar = () => {
   const { logout, authUser } = useAuthStore();
@@ -41,6 +41,11 @@ const NavBar = () => {
               <Settings className="w-4 h-4" />
               <span className="hidden sm:inline">Settings</span>
             </Link>
+
+            <Link to={"/download"} className={`btn btn-sm gap-2`}>
+                  <Download className="size-5" />
+                  <span className="hidden sm:inline">Download</span>
+                </Link>
 
             {authUser && (
               <>
