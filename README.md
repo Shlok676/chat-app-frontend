@@ -57,4 +57,4 @@ Access ChatApp directly in any modern desktop or mobile browser without download
 
 ## 📄 License
 
-This project is released under the [MIT License](LICENSE).
+This project is released under the [GNU General Public License](LICENSE).
