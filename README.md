@@ -1,4 +1,4 @@
-# Chattys 💬
+# Chatty 💬
 
 A modern, fast, cross-platform messaging application that lets you connect with friends without needing a phone number. Available across **Web**, **Windows**, and **Android**.
 
@@ -39,6 +39,11 @@ A modern, fast, cross-platform messaging application that lets you connect with 
 4. Once installed, launch the app from your home screen or app drawer.
 
 ---
+
+### ❓ Fixing errors
+
+If you encounter any bugs or error after updating the app, please perform a clean reinstall.
+If the issue is not fixed then please open a issue under the Issues tab
 
 ### 🌐 Web Version
 
