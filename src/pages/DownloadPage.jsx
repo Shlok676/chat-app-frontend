@@ -15,7 +15,7 @@ export default function DownloadPage() {
               <p className="text-xs text-base-content/70">Compatible with Windows 10 / 11 (64-bit)</p>
               <div className="card-actions w-full pt-2">
                 <a
-                  href="https://github.com/Shlok676/chat-app-frontend/releases/latest/download/Chatty.Setup.1.1.0.exe"
+                  href="https://github.com/Shlok676/chat-app-frontend/releases/download/v1.1.0/Chatty.Setup.1.1.0.exe"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="btn btn-primary w-full"
@@ -31,7 +31,7 @@ export default function DownloadPage() {
               <p className="text-xs text-base-content/70">Requires Android 8.0 or higher</p>
               <div className="card-actions w-full pt-2">
                 <a
-                  href="https://github.com/Shlok676/chat-app-frontend/releases/latest/download/chatty-v-1.1.0.apk"
+                  href="https://github.com/Shlok676/chat-app-frontend/releases/download/v1.1.0/chatty-v-1.1.0.apk"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="btn btn-secondary w-full"
